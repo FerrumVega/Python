@@ -2582,14 +2582,14 @@ print((k/n) * S)  # (точек / метр) * площадь квадрата
 Реализация алгоритма:
 `import random`
 ```python
-def is_sort(nums):                   # отсортирован ли список?
+def is_sorted(nums):                   # отсортирован ли список?
     for i in range(len(nums) - 1):
         if nums[i] > nums[i + 1]:
             return False
     return True
 
 def bogosort(nums):                  # реализация алгоритма болотной сортировки
-    while not is_sort(nums):
+    while not is_sorted(nums):
         random.shuffle(nums)
     return nums
 
