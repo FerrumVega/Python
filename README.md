@@ -2966,9 +2966,10 @@ print(num1, num2, num3, sep='\n')
 >>> 1/45  
 
 ```  
-Не стоит создавать Fraction из float:
-`from fractions import Fraction`  
+Не стоит создавать Fraction из float:  
 ```python
+from fractions import Fraction  
+
 num = Fraction(0.34)  
 
 print(num)  # Вместо 17/50 код выведет:  
