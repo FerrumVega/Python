@@ -3525,8 +3525,21 @@ def main_function(a, b, c):
 
 print(main_function(1, 23, 12)(1))  
 >>> 276  
-
 ```  
+Пример использования:    
+```python
+def tracker(func_name):  
+    def print_func_name(a):  
+        print(func_name)  
+        return a  
+
+    return print_func_name  
+
+
+print(max([1, 2, 3], key=tracker("max")))  
+print(min([1, 2, 3], key=tracker("min")))  
+```  
+(Сначала вызывается трекер с именем функции, а затем функция внутри, возвращающая само число.)    
 ## Функции высшего порядка  
 Функции, которые принимают или/и возвращают другие функции, называются функциями высшего порядка.    
 ```python
