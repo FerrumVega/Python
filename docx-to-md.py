@@ -78,12 +78,9 @@ def docx_to_markdown(docx_path, output_dir):
 
             if is_code_font:
                 if not in_code_block and current_code_block:
+                    code_block_text = "\n".join(current_code_block)
                     markdown_lines.append(
-                        add_two_spaces(
-                            f"""```python
-{'\n'.join(current_code_block)}
-```"""
-                        )
+                        add_two_spaces(f"```python\n{code_block_text}\n```")
                     )
                     current_code_block = []
                 in_code_block = True
