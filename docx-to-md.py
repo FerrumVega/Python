@@ -177,7 +177,7 @@ def docx_to_markdown(docx_path, output_dir):
         indent = "  " * (level - 1)
         toc.append(add_two_spaces(f"{indent}- [{title}](#{anchor})"))
 
-    output_path = os.path.join(output_dir, "output.md")
+    output_path = os.path.join(output_dir, "README.md")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(toc + ["\n"] + markdown_lines))
 

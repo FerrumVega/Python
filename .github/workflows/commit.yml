@@ -29,17 +29,7 @@ jobs:
 
       - name: Move converted files to repo root
         run: |
-          shopt -s nullglob
-          for f in MarkdownOutput/*; do
-            mv "$f" .
-          done
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add *.md
-          git commit -m "Auto-update Markdown from DOCX" || echo "No changes"
+          cp -r MarkdownOutput/* .
 
       - name: Push converted Markdown
         uses: ad-m/github-push-action@v0.6.0
