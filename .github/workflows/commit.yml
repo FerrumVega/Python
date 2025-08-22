@@ -35,10 +35,10 @@ jobs:
           mv "$f" .
         done
 
-    - name: Commit converted Markdown
+    - name: Commit and push converted Markdown
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git add *.md
         git commit -m "Auto-update Markdown from DOCX" || echo "No changes"
-        git push
+        git push https://x-access-token:$GH_TOKEN@github.com/${{ github.repository }} HEAD:main
