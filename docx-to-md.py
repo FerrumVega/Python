@@ -80,7 +80,9 @@ def docx_to_markdown(docx_path, output_dir):
                 if not in_code_block and current_code_block:
                     markdown_lines.append(
                         add_two_spaces(
-                            f"```python\n{'\n'.join(current_code_block)}\n```"
+                            f"""```python
+{'\n'.join(current_code_block)}
+```"""
                         )
                     )
                     current_code_block = []
