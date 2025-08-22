@@ -1,9 +1,8 @@
 import re
 import docx
 import os
-from docx.shared import Inches
-from docx import document
-from docx.oxml import parse_xml
+
+# === КОД БЫЛ СГЕНЕРИРОВАН НЕЙРОСЕТЬЮ ===
 
 
 def sanitize_anchor(text):
