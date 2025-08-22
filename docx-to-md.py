@@ -2,7 +2,7 @@ import re
 import docx
 import os
 
-# === КОД БЫЛ СГЕНЕРИРОВАН НЕЙРОСЕТЬЮ ===
+# === DOCX TO MARKDOWN ===
 
 
 def sanitize_anchor(text):
@@ -13,13 +13,12 @@ def sanitize_anchor(text):
 
 def is_list_paragraph(paragraph):
     """Проверка, является ли параграф элементом списка в Word."""
-    p = paragraph._p  # получаем xml-элемент параграфа
+    p = paragraph._p
     numPr = p.find(".//w:numPr", p.nsmap)
     return numPr is not None
 
 
 def add_two_spaces(line):
-    """Добавляет два пробела в конец строки."""
     return line + "  "
 
 
@@ -29,22 +28,22 @@ def docx_to_markdown(docx_path, output_dir):
     os.makedirs(images_dir, exist_ok=True)
 
     doc = docx.Document(docx_path)
-
     markdown_lines = []
     current_code_block = []
     in_code_block = False
     image_counter = 1
 
+    # Собираем картинки
     image_parts = {}
     for rel in doc.part.rels.values():
-        if "image" in rel.target_ref:
+        if rel.target_ref and "image" in rel.target_ref:
             image_parts[rel.rId] = rel.target_part
 
     for element in doc.element.body:
         if element.tag.endswith("p"):
             paragraph = docx.text.paragraph.Paragraph(element, doc)
 
-            # Обработка изображений
+            # Изображения
             if paragraph._element.xpath(".//pic:pic"):
                 for run in paragraph.runs:
                     if run._element.xpath(".//pic:pic"):
@@ -61,45 +60,41 @@ def docx_to_markdown(docx_path, output_dir):
                                 )
                             )
                             image_counter += 1
-                continue  # Пропускаем дальнейшую обработку для параграфов с изображениями
+                continue
 
             is_code_font = all(
                 run.font and run.font.name == "Cascadia Mono" for run in paragraph.runs
             )
             has_content = bool(paragraph.text.strip())
 
-            # Обработка пустых параграфов
             if not has_content:
                 if in_code_block and is_code_font:
-                    current_code_block.append("")  # Пустая строка в блоке кода
+                    current_code_block.append("")
                 else:
-                    markdown_lines.append("")  # Добавляем пустую строку в markdown
+                    markdown_lines.append("")
                 continue
 
             if is_code_font:
                 if not in_code_block and current_code_block:
-                    code_block_text = "\n".join(current_code_block)
+                    code_text = "\n".join(current_code_block)
                     markdown_lines.append(
-                        add_two_spaces(f"```python\n{code_block_text}\n```")
+                        add_two_spaces(f"```python\n{code_text}\n```")
                     )
                     current_code_block = []
                 in_code_block = True
                 current_code_block.append(add_two_spaces(paragraph.text))
             else:
                 if in_code_block and current_code_block:
+                    code_text = "\n".join(current_code_block)
                     markdown_lines.append(
-                        add_two_spaces(
-                            f"```python\n{'\n'.join(current_code_block)}\n```"
-                        )
+                        add_two_spaces(f"```python\n{code_text}\n```")
                     )
                     current_code_block = []
                     in_code_block = False
 
                 paragraph_text = ""
-                i = 0
                 runs = paragraph.runs
-
-                # Новая логика обработки инлайн-кода
+                i = 0
                 while i < len(runs):
                     run = runs[i]
                     if (
@@ -107,21 +102,17 @@ def docx_to_markdown(docx_path, output_dir):
                         and run.font.name == "Cascadia Mono"
                         and run.text.strip()
                     ):
-                        # Начало инлайн-кода
                         code_parts = [run.text]
                         j = i + 1
-                        # Ищем следующие runs, которые могут быть частью этого же кода
                         while j < len(runs):
                             next_run = runs[j]
                             if (
-                                next_run.font
-                                and next_run.font.name == "Cascadia Mono"
-                                or (
-                                    next_run.text == " "
-                                    and j + 1 < len(runs)
-                                    and runs[j + 1].font
-                                    and runs[j + 1].font.name == "Cascadia Mono"
-                                )
+                                next_run.font and next_run.font.name == "Cascadia Mono"
+                            ) or (
+                                next_run.text == " "
+                                and j + 1 < len(runs)
+                                and runs[j + 1].font
+                                and runs[j + 1].font.name == "Cascadia Mono"
                             ):
                                 code_parts.append(next_run.text)
                                 j += 1
@@ -139,50 +130,36 @@ def docx_to_markdown(docx_path, output_dir):
                     level = int(paragraph.style.name.split()[-1])
                     clean_text = paragraph_text.strip()
                     markdown_lines.append(add_two_spaces(f"{'#' * level} {clean_text}"))
+                elif is_list_paragraph(paragraph):
+                    markdown_lines.append(add_two_spaces(f"- {paragraph_text.strip()}"))
                 else:
-                    if is_list_paragraph(paragraph):
-                        markdown_lines.append(
-                            add_two_spaces(f"- {paragraph_text.strip()}")
-                        )
-                    else:
-                        markdown_lines.append(add_two_spaces(paragraph_text))
+                    markdown_lines.append(add_two_spaces(paragraph_text))
 
         elif element.tag.endswith("tbl"):
             table = docx.table.Table(element, doc)
-            markdown_lines.append(add_two_spaces("\n"))
-
             num_cols = len(table.columns)
-
-            header = []
-            for cell in table.rows[0].cells:
-                header.append(add_two_spaces(cell.text.strip()))
+            header = [add_two_spaces(cell.text.strip()) for cell in table.rows[0].cells]
             markdown_lines.append(add_two_spaces("| " + " | ".join(header) + " |"))
-
             markdown_lines.append(
                 add_two_spaces("|" + "|".join(["---"] * num_cols) + "|")
             )
 
             for row in table.rows[1:]:
-                row_data = []
-                for cell in row.cells:
-                    row_data.append(
-                        add_two_spaces(cell.text.strip().replace("\n", "<br>"))
-                    )
+                row_data = [
+                    add_two_spaces(cell.text.strip().replace("\n", "<br>"))
+                    for cell in row.cells
+                ]
                 markdown_lines.append(
                     add_two_spaces("| " + " | ".join(row_data) + " |")
                 )
 
-            markdown_lines.append(add_two_spaces("\n"))
-
     if current_code_block:
-        markdown_lines.append(
-            add_two_spaces(f"```python\n{'\n'.join(current_code_block)}\n```")
-        )
+        code_text = "\n".join(current_code_block)
+        markdown_lines.append(add_two_spaces(f"```python\n{code_text}\n```"))
 
-    # Добавляем два пробела в конец каждой строки в оглавлении
+    # Оглавление
     toc = [add_two_spaces("## Оглавление")]
     headers = []
-
     for line in markdown_lines:
         if line.startswith("#") and not line.startswith("## Оглавление"):
             level = len(line.split()[0])
@@ -197,7 +174,6 @@ def docx_to_markdown(docx_path, output_dir):
             anchor = f"{anchor}-{anchor_counts[anchor]}"
         else:
             anchor_counts[anchor] = 1
-
         indent = "  " * (level - 1)
         toc.append(add_two_spaces(f"{indent}- [{title}](#{anchor})"))
 
@@ -208,7 +184,7 @@ def docx_to_markdown(docx_path, output_dir):
     return output_path
 
 
-# Пример использования
+# === Использование ===
 docx_path = "Python теория.docx"
 output_dir = "MarkdownOutput"
 result_path = docx_to_markdown(docx_path, output_dir)
