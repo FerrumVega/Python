@@ -11,33 +11,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install python-docx
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install python-docx
 
-    - name: Run DOCX to Markdown converter
-      run: python docx-to-md.py
+      - name: Run DOCX to Markdown converter
+        run: python docx-to-md.py
 
-    - name: Move converted files to repo root
-      run: |
-        shopt -s nullglob
-        for f in MarkdownOutput/*; do
-          mv "$f" .
-        done
+      - name: Move converted files to repo root
+        run: |
+          shopt -s nullglob
+          for f in MarkdownOutput/*; do
+            mv "$f" .
+          done
 
-    - name: Commit and push changes
-      uses: ad-m/github-push-action@v0.6.0
-      with:
-        github_token: ${{ secrets.GH_TOKEN }}
-        commit_message: "Auto-update Markdown from DOCX"
-        branch: main
-        force: false
+      - name: Push converted Markdown
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          branch: main
+          directory: .
+          force: false
