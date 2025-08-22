@@ -25,8 +25,7 @@ jobs:
         pip install python-docx
 
     - name: Run DOCX to Markdown converter
-      run: |
-        python docx-to-md.py
+      run: python docx-to-md.py
 
     - name: Move converted files to repo root
       run: |
@@ -35,12 +34,10 @@ jobs:
           mv "$f" .
         done
 
-    - name: Commit and push converted Markdown
-      env:
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git add *.md
-        git commit -m "Auto-update Markdown from DOCX" || echo "No changes"
-        git push https://x-access-token:$GH_TOKEN@github.com/${{ github.repository }} HEAD:main
+    - name: Commit and push changes
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        github_token: ${{ secrets.GH_TOKEN }}
+        commit_message: "Auto-update Markdown from DOCX"
+        branch: main
+        force: false
